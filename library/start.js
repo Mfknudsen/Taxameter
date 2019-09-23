@@ -38,13 +38,13 @@ function start(taxameter) {
             tid: nyLabel("Tid"),
             afstand: nyLabel("Km"),
             pris: nyLabel("Pris"),
+            name: nyLabel("Name"),
             start: nyKnap("Start", "start"),
             slut: nyKnap("Slut", "slut")
         };
+        elementer.name.innerText = taxameter.Name;
 
         document.body.appendChild(hovedElement);
-
-
         let hastighed = 0;
 
         setInterval(() => {
