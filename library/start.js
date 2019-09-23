@@ -1,0 +1,118 @@
+/**
+ * 
+ * @param {Taxameter} taxameter 
+ */
+function start(taxameter) {
+    document.addEventListener("DOMContentLoaded", () => {
+        const hovedElement = document.createElement("div");
+        hovedElement.classList.add("taxameter");
+
+        function nyLabel(tekst) {
+            const div = document.createElement("div");
+
+            const label = document.createElement("label");
+            label.innerText = tekst;
+
+            const indreDiv = document.createElement("div");
+
+            div.appendChild(label);
+            div.appendChild(indreDiv);
+
+            hovedElement.appendChild(div);
+
+            return indreDiv;
+        }
+
+        function nyKnap(tekst, klasse) {
+            const div = document.createElement("div");
+
+            div.innerText = tekst;
+            div.classList.add("knap", klasse);
+
+            hovedElement.appendChild(div);
+
+            return div;
+        }
+
+        const elementer = {
+            tid: nyLabel("Tid"),
+            afstand: nyLabel("Km"),
+            pris: nyLabel("Pris"),
+            start: nyKnap("Start", "start"),
+            slut: nyKnap("Slut", "slut")
+        };
+
+        document.body.appendChild(hovedElement);
+
+
+        let hastighed = 0;
+
+        setInterval(() => {
+            if (taxameter.Date === undefined) {
+                hastighed = 0;
+            } else {
+
+                const r = Math.random();
+
+                if (hastighed === 0) {
+                    if (r < 0.2) {
+                        hastighed = 5;
+                    }
+                } else if (r < 0.1) { // 10% for at møde et lyskryds
+                    hastighed = 0;
+                } else if (r < 0.8) { // 70% for speeder
+                    hastighed += Math.random() * 5;
+                } else { // 20% for brems
+                    hastighed *= 0.7;
+                }
+
+                hastighed = Math.max(hastighed, 0);
+                hastighed = Math.min(hastighed, 80);
+
+                taxameter.KMadd(hastighed/7200);
+            }
+        }, 500);
+
+        setInterval(() => {
+            if (taxameter.Date === undefined) {
+                elementer.tid.innerText = '0:00';
+            } else {
+                const tidGaaet = Math.floor((new Date() - taxameter.Date) / 1000);
+                const sekunder = ("00" + tidGaaet % 60).slice(-2);
+                const minutter = Math.floor(tidGaaet / 60);
+                taxameter.min = minutter;
+                elementer.tid.innerText = minutter + ":" + sekunder;
+            }
+
+            elementer.afstand.innerText = Math.round(taxameter.Dist*1000)/1000;
+            elementer.pris.innerText = Math.round(taxameter.CalcPrice()*100)/100 + " DKK";
+        }, 500);
+
+        function opdater() {
+            if (taxameter.Date === undefined) {
+                hovedElement.classList.remove("startet");
+            } else {
+                hovedElement.classList.add("startet");
+            }
+        }
+
+        elementer.start.addEventListener("click", () => {
+            let a;
+            if (taxameter.KMReduction != 0){
+                a = " Vi har også en rabat på " + taxameter.KMReduction + " for den første kilometer."
+            } else {
+                a = "";
+            }
+
+            alert("Velkommen til " + taxameter.Name + ". " + "Vi har en base pris på " + taxameter.EntBasePrice + " og det vil koste " + taxameter.EntPricePerKM + " for hver KM og " + taxameter.EntPricePerMin + " for hvert minut." + a);
+            taxameter.StartTrip();
+            hastighed = 5;
+            opdater();
+        });
+        elementer.slut.addEventListener("click", () => {
+            alert("Det bliver: " + taxameter.CalcPrice() + " DKK");
+            taxameter.EndTrip();
+            opdater();
+        });
+    });
+}
